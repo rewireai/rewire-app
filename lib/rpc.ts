@@ -38,6 +38,7 @@ export class Rpc {
         await new Promise((r) => setTimeout(r, 500 * 2 ** attempt));
         continue;
       }
+      if (!res.ok) throw new Error(`${method}: RPC answered HTTP ${res.status} (check RPC_URL)`);
       const body = (await res.json()) as { result?: T; error?: { message: string } };
       if (body.error) throw new Error(`${method}: ${body.error.message}`);
       return body.result as T;
