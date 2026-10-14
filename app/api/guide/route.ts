@@ -23,9 +23,8 @@ export async function POST(req: Request) {
   try {
     out = await guide(text);
   } catch (e) {
-    // Error type and status only: never the person's words.
-    const status = (e as { status?: number }).status;
-    console.error("guide failed", (e as Error).name, status ?? "", status === undefined ? (e as Error).message : "");
+    // The API's own error text (it never echoes the prompt); never the person's words.
+    console.error("guide failed", (e as Error).name, String((e as Error).message).slice(0, 300));
     return Response.json({ error: "The guide is unavailable right now. Use the search form below." }, { status: 502 });
   }
   if (!out) return Response.json({ error: "The guide couldn't help with that. Use the search form below." }, { status: 200 });
