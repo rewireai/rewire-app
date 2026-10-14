@@ -22,7 +22,10 @@ export async function POST(req: Request) {
   let out;
   try {
     out = await guide(text);
-  } catch {
+  } catch (e) {
+    // Error type and status only: never the person's words.
+    const status = (e as { status?: number }).status;
+    console.error("guide failed", (e as Error).name, status ?? "", status === undefined ? (e as Error).message : "");
     return Response.json({ error: "The guide is unavailable right now. Use the search form below." }, { status: 502 });
   }
   if (!out) return Response.json({ error: "The guide couldn't help with that. Use the search form below." }, { status: 200 });
