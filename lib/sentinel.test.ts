@@ -59,3 +59,12 @@ describe("sentinel pure pieces", () => {
     expect(lamportsToSol(-5000n)).toBe("-0.000005");
   });
 });
+
+describe("rpc url", () => {
+  it("strips pasted whitespace and quotes", async () => {
+    const { Rpc } = await import("./rpc");
+    expect(new Rpc(' "https://mainnet.helius-rpc.com/?api-key=abc"\n').url).toBe(
+      "https://mainnet.helius-rpc.com/?api-key=abc",
+    );
+  });
+});

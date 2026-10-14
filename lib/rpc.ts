@@ -25,7 +25,22 @@ export interface SignatureInfo {
 
 export class Rpc {
   private id = 0;
-  constructor(readonly url: string) {}
+  readonly url: string;
+  constructor(url: string) {
+    // Dashboard pastes often carry spaces, a newline or quotes; any of them breaks the api-key.
+    this.url = url.trim().replace(/^["']|["']$/g, "");
+  }
+
+  /** Where a failing request went, without the key: host, path and api-key length. */
+  private describe(): string {
+    try {
+      const u = new URL(this.url);
+      const key = u.searchParams.get("api-key");
+      return `${u.host}${u.pathname}${key === null ? " (no api-key)" : ` (api-key ${key.length} chars)`}`;
+    } catch {
+      return "an invalid URL";
+    }
+  }
 
   async call<T>(method: string, params: unknown[]): Promise<T> {
     for (let attempt = 0; ; attempt++) {
@@ -38,7 +53,9 @@ export class Rpc {
         await new Promise((r) => setTimeout(r, 500 * 2 ** attempt));
         continue;
       }
-      if (!res.ok) throw new Error(`${method}: RPC answered HTTP ${res.status} (check RPC_URL)`);
+      if (!res.ok) {
+        throw new Error(`${method}: RPC answered HTTP ${res.status} from ${this.describe()} (check RPC_URL)`);
+      }
       const body = (await res.json()) as { result?: T; error?: { message: string } };
       if (body.error) throw new Error(`${method}: ${body.error.message}`);
       return body.result as T;
